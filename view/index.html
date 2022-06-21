@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="/bootstrap5/css/bootstrap.min.css">
+    <script src="/jquery-3.5.1.min.js"></script>
+    <script src="/echarts-5.3.3/dist/echarts.min.js"></script>
+    <script src="/php.js"></script>
+
+    <title>不須資料庫不須設定的 Linux 監控 - Hoyo</title>
+    <style>
+        .usage_radio{
+            background-color: #ddd;
+            height: 42px;
+            position: absolute;
+        }
+        .usage_box{
+            display: inline-block;
+            position: absolute;
+            border: 1px solid;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            padding: 8px 0;
+        }
+        .blockquote {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card p-3">
+                <figure class="p-3 mb-0">
+                    <blockquote class="blockquote">
+                        <p class="title">CPU 型號</p>
+                    </blockquote>
+                    <figcaption class="mb-0 text-muted message">{{cpu}}</figcaption>
+                </figure>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card p-3">
+                <figure class="p-3 mb-0">
+                    <blockquote class="blockquote">
+                        <p class="title">記憶體</p>
+                    </blockquote>
+                    <figcaption class="mb-0 text-muted message">{{ram}}MB</figcaption>
+                </figure>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card p-3">
+                <figure class="p-3 mb-0">
+                    <blockquote class="blockquote">
+                        <p class="title">硬碟</p>
+                    </blockquote>
+                    <figcaption class="mb-0 text-muted message">{{hdd}}MB</figcaption>
+                </figure>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card p-2">
+                <figure class="p-1 mb-0">
+                    <blockquote class="blockquote">
+                        <p class="title">RX 進入流量</p>
+                    </blockquote>
+                    <figcaption class="mb-0 text-muted ">
+                        <div id="message_rx" class="message"></div>
+                        <div id="chart_rx" class="chart" style="width: 100%; height: 100px;"></div>
+                    </figcaption>
+                </figure>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card p-2">
+                <figure class="p-1 mb-0">
+                    <blockquote class="blockquote">
+                        <p class="title">TX 輸出流量</p>
+                    </blockquote>
+                    <figcaption class="mb-0 text-muted ">
+                        <div id="message_tx" class="message"></div>
+                        <div id="chart_tx" class="chart" style="width: 100%; height: 100px;"></div>
+                    </figcaption>
+                </figure>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-outline-danger" onclick="release_cache()">釋放記憶體 CACHE</button>
+    </div>
+
+    <div class="row" id="show">
+
+    </div>
+</div>
+
+<div id="template_usage" style="display: none;">
+    <div class="col-sm-6 col-lg-4 mb-4">
+        <div class="card p-2">
+            <figure class="p-1 mb-0">
+                <blockquote class="blockquote">
+                    <p class="title"></p>
+                </blockquote>
+                <figcaption class="mb-0 text-muted message" style="height: 2.5rem;">
+                    <div style=" position: relative;">
+                        <div class="usage_radio" style="width:0;"></div>
+                        <div class="usage_box">0</div>
+                    </div>
+                </figcaption>
+            </figure>
+        </div>
+    </div>
+</div>
+
+<div id="template_monitor" style="display: none;">
+    <div class="col-sm-6 col-lg-4 mb-4">
+        <div class="card p-2">
+            <figure class="p-1 mb-0">
+                <blockquote class="blockquote">
+                    <p class="title"></p>
+                </blockquote>
+                <figcaption class="mb-0 text-muted message"></figcaption>
+            </figure>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log(Window.devicePixelRatio);
+
+    let rx = -1;
+    let rx_queue = [];
+    let tx = -1;
+    let tx_queue = [];
+    let myChart_rx = echarts.init(document.getElementById('chart_rx'));
+    let myChart_tx = echarts.init(document.getElementById('chart_tx'));
+    let option = {
+        // animation: false,
+        grid: {
+            left: 28,
+            top: 10,
+            right: 6,
+            bottom: 10
+        },
+        tooltip: {},
+        legend: {
+            data:[]
+        },
+        xAxis: {
+            data: []
+        },
+        yAxis: {
+            max: 100,
+        },
+        series: [{
+            symbolSize: 4,
+            name: '流量',
+            type: 'line',
+            smooth: true,
+            areaStyle: {},
+        }]
+    };
+    myChart_rx.setOption(option);
+    myChart_tx.setOption(option);
+
+
+    function release_cache(){
+        $.ajax({
+            url: '/ReleaseCache',
+            type: 'post',
+            data: {},
+            success: function (json) {
+                if ( json['result'] === true ){
+
+                    get();
+                }
+            }
+        });
+    }
+
+    function get(){
+        $.ajax({
+            url: '/Get',
+            type: 'post',
+            data: {},
+            success: function (json) {
+
+                if ( json['result'] === true ){
+
+                    let h = '';
+
+                    $.each( json['usage'], function(k,v){
+
+                        let t = $('#template_usage').clone();
+                        if ( k === 'cpu' ) t.find('.title').text('CPU 使用率');
+                        if ( k === 'hdd' ) t.find('.title').text('硬碟使用率');
+                        if ( k === 'ram' ) t.find('.title').text('記憶體使用率');
+                        t.find('.usage_radio').width(v);
+                        t.find('.usage_box').text(v);
+
+                        h += t.html();
+                    } );
+
+                    $.each( json['monitor'], function(k,v){
+
+                        let t = $('#template_monitor').clone();
+                        t.find('.title').text(k);
+                        t.find('.message').text(v);
+
+                        h += t.html();
+                    } );
+
+                    let show_rx = '';
+                    if ( rx >=0 ){
+                        show_rx = number_format((json['net_rx'] - rx) *8/3, 2, '.', '');
+                        rx_queue.push(parseFloat(show_rx));
+                        show_rx += 'Mb';
+
+                        if ( rx_queue.length > 20 ) rx_queue.shift();
+                    }
+                    else{
+                        show_rx = '-';
+                    }
+
+                    $('#message_rx').text(show_rx);
+                    rx = json['net_rx'];
+
+                    myChart_rx.setOption({
+                        series: [{
+                            data: rx_queue
+                        }]
+                    });
+
+                    // tx
+                    let show_tx = '';
+                    if ( tx >=0 ){
+                        show_tx = number_format((json['net_tx'] - tx) *8/3, 2, '.', '');
+                        tx_queue.push(parseFloat(show_tx));
+                        show_tx += 'Mb';
+
+                        if ( tx_queue.length > 20 ) tx_queue.shift();
+                    }
+                    else{
+                        show_tx = '-';
+                    }
+
+                    myChart_tx.setOption({
+                        series: [{
+                            data: tx_queue
+                        }]
+                    });
+
+                    $('#message_tx').text(show_tx);
+                    tx = json['net_tx'];
+
+                    $('#show').html(h);
+                }
+
+            }
+        });
+    }
+
+    get();
+    setInterval(function(){
+        get();
+    }, 3000);
+
+    // https://stackoverflow.com/questions/27800171/echarts-how-to-use-the-resize-event-of-the-window
+    window.onresize = function() {
+        myChart_rx.resize();
+        myChart_tx.resize();
+    };
+
+</script>
+
+</body>
+</html>
