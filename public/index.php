@@ -58,14 +58,17 @@ class index
     public function Get()
     {
         // 網站
-        $command = ' ss -tan | grep ":80 " | wc -l ';
+        $command = ' ss -tan | grep ":80 " | grep -v grep | wc -l ';
         $netstat_80 = trim(shell_exec($command));
 
-        $command = ' ss -tan | grep ":3306 " | wc -l ';
+        $command = ' ss -tan | grep ":443 " | grep -v grep | wc -l ';
+        $netstat_443 = trim(shell_exec($command));
+
+        $command = ' ss -tan | grep ":3306 " | grep -v grep | wc -l ';
         $netstat_3306 = trim(shell_exec($command));
 
         // time wait
-        $command = ' ss -tan | grep TIME-WAIT | wc -l ';
+        $command = ' ss -tan | grep TIME-WAIT | grep -v grep | wc -l ';
         $netstat_time_wait = trim(shell_exec($command));
 
         // 網卡流量
@@ -96,9 +99,10 @@ class index
         ];
 
         //
-        $data['monitor']['80 Port'] = $netstat_80;
-        $data['monitor']['3306 Port'] = $netstat_3306;
-        $data['monitor']['Time Wait'] = $netstat_time_wait;
+        $data['monitor']['80 Port Connections'] = $netstat_80;
+        $data['monitor']['443 Port Connections'] = $netstat_443;
+        $data['monitor']['3306 Port Connections'] = $netstat_3306;
+        $data['monitor']['Time Wait Connections'] = $netstat_time_wait;
         $data['net_rx'] = $net_rx;
         $data['net_tx'] = $net_tx;
         $data['usage']['cpu'] = $cpu_usage;

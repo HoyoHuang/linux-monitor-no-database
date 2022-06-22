@@ -110,6 +110,7 @@
     </div>
 </div>
 
+<!-- 百分比模板 -->
 <div id="template_usage" style="display: none;">
     <div class="col-sm-6 col-lg-4 mb-4">
         <div class="card p-2">
@@ -128,6 +129,7 @@
     </div>
 </div>
 
+<!-- 數字模板 -->
 <div id="template_monitor" style="display: none;">
     <div class="col-sm-6 col-lg-4 mb-4">
         <div class="card p-2">
@@ -142,8 +144,6 @@
 </div>
 
 <script>
-    console.log(Window.devicePixelRatio);
-
     let rx = -1;
     let rx_queue = [];
     let tx = -1;
@@ -151,7 +151,7 @@
     let myChart_rx = echarts.init(document.getElementById('chart_rx'));
     let myChart_tx = echarts.init(document.getElementById('chart_tx'));
     let option = {
-        // animation: false,
+        animation: false,
         grid: {
             left: 28,
             top: 10,
@@ -169,7 +169,8 @@
             max: 100,
         },
         series: [{
-            symbolSize: 4,
+            showSymbol: false,
+            // symbolSize: 4,
             name: '流量',
             type: 'line',
             smooth: true,
@@ -204,6 +205,16 @@
                 if ( json['result'] === true ){
 
                     let h = '';
+
+                    // Object.entries(json['usage']).forEach(entry => {
+                    //     const [k, v] = entry;
+                    //     console.log(k, v);
+                    // });
+
+                    // for( const[k,v] of Object.entries(json['usage'])){
+                    //     console.log(k);
+                    //     console.log(v);
+                    // }
 
                     $.each( json['usage'], function(k,v){
 
