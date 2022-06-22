@@ -25,6 +25,10 @@
 
 將以上代號設定 config.php 即可，預設為 eth0 & sda
 
+## 歷史資料
+
+流量的圖表是使用 Javascript 的陣列儲存而來，因此網頁重新整理後就需要重新紀錄
+
 ## 成果
 
 ![20220622 202233](https://user-images.githubusercontent.com/20652669/175028266-5ecf1000-adce-4669-ba1a-b4b5a43772fe.png)
