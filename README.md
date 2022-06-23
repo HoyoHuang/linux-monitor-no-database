@@ -40,3 +40,6 @@
 # git reset --hard
 # git pull
 ```
+
+然後 `ps -ax` 找到 php 常駐的程式 `kill -9 id` 後就可以重新啟動
+
