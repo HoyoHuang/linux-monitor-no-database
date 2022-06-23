@@ -33,3 +33,9 @@
 
 ![20220622 202233](https://user-images.githubusercontent.com/20652669/175028266-5ecf1000-adce-4669-ba1a-b4b5a43772fe.png)
 
+# clone 後更新
+
+```shell
+# git config --global --add safe.directory /opt/linux-monitor-no-database
+# git pull
+```
