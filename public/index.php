@@ -43,9 +43,10 @@ class index
         $hdd_size = number_format((float)shell_exec($command) /1024/1024, 2, '.', '');
 
         $page = file_get_contents(__DIR__ .'/../view/index.html');
-        $page = str_replace('{{cpu}}', $cpu_name, $page);
-        $page = str_replace('{{ram}}', $ram_usage_total, $page);
-        $page = str_replace('{{hdd}}', $hdd_size, $page);
+        $page = str_replace('{cpu}', $cpu_name, $page);
+        $page = str_replace('{ram}', $ram_usage_total, $page);
+        $page = str_replace('{hdd}', $hdd_size, $page);
+        $page = str_replace('{network_data_rate}', NetDataRate, $page);
         echo $page;
     }
 
