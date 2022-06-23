@@ -37,5 +37,6 @@
 
 ```shell
 # git config --global --add safe.directory /opt/linux-monitor-no-database
+# git reset --hard
 # git pull
 ```
